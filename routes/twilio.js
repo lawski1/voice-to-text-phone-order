@@ -12,10 +12,12 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 router.post('/voice', (req, res) => {
   const twiml = new twilio.twiml.VoiceResponse();
   
-  // Greet the caller
+  // Park Slope Perk greeting message
   twiml.say(
     { voice: 'alice', language: 'en-US' },
-    'Welcome to our coffee shop! Please tell us your order after the beep.'
+    'Thank you for calling Park Slope Perk! We\'re ready to take your order. ' +
+    'Please tell us what you\'d like, including the drink size and any modifications. ' +
+    'Speak clearly after the beep, and press pound when you\'re finished. Thank you!'
   );
   
   // Record the order with transcription
@@ -27,10 +29,11 @@ router.post('/voice', (req, res) => {
     finishOnKey: '#'
   });
   
-  // If no input, say goodbye
+  // Park Slope Perk closing message
   twiml.say(
     { voice: 'alice', language: 'en-US' },
-    'Thank you for your order! We will process it shortly. Goodbye!'
+    'Perfect! We got your order and will have it ready for you soon. ' +
+    'Thank you for calling Park Slope Perk. Have a wonderful day!'
   );
   
   twiml.hangup();
@@ -117,4 +120,5 @@ router.post('/status', (req, res) => {
 });
 
 module.exports = router;
+
 
