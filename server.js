@@ -22,14 +22,20 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rate limiting - configured for proxy environments (Railway)
+// Use custom keyGenerator to avoid X-Forwarded-For validation issues
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Skip validation of X-Forwarded-For header (Railway proxy)
+  // Custom key generator that works with proxies - avoids X-Forwarded-For validation error
+  keyGenerator: (req) => {
+    // Use the IP from the request, which Express will resolve from proxy headers
+    // since we set trust proxy
+    return req.ip || req.connection.remoteAddress || 'unknown';
+  },
+  // Skip rate limiting for health checks and Twilio webhooks
   skip: (req) => {
-    // Skip rate limiting for health checks and Twilio webhooks
     return req.path === '/health' || req.path.startsWith('/twilio');
   }
 });
