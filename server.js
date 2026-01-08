@@ -122,6 +122,15 @@ db.init().then(() => {
       console.log(`${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
     } else if (middleware.name === 'router') {
       console.log(`Router mounted at: ${middleware.regexp}`);
+      // Log routes in the router
+      if (middleware.handle && middleware.handle.stack) {
+        middleware.handle.stack.forEach((route) => {
+          if (route.route) {
+            const methods = Object.keys(route.route.methods).join(', ').toUpperCase();
+            console.log(`  ${methods} ${middleware.regexp.source.replace('\\', '')}${route.route.path}`);
+          }
+        });
+      }
     }
   });
   console.log('========================');
@@ -130,6 +139,7 @@ db.init().then(() => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`✅ Health check: http://localhost:${PORT}/health`);
     console.log(`✅ Twilio webhook: http://localhost:${PORT}/twilio/voice`);
+    console.log(`✅ All routes registered and ready!`);
   });
 }).catch(err => {
   console.error('❌ Failed to initialize database:', err);
