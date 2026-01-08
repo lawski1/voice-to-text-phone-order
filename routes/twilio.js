@@ -8,39 +8,82 @@ const router = express.Router();
 // Twilio webhook authentication
 const authToken = process.env.TWILIO_AUTH_TOKEN;
 
-// Handle incoming phone call
-router.post('/voice', (req, res) => {
-  const twiml = new twilio.twiml.VoiceResponse();
-  
-  // Park Slope Perk greeting message
-  twiml.say(
-    { voice: 'alice', language: 'en-US' },
-    'Thank you for calling Park Slope Perk! We\'re ready to take your order. ' +
-    'Please tell us what you\'d like, including the drink size and any modifications. ' +
-    'Speak clearly after the beep, and press pound when you\'re finished. Thank you!'
-  );
-  
-  // Record the order with transcription
-  twiml.record({
-    maxLength: 60,
-    transcribe: true,
-    transcribeCallback: '/twilio/transcription',
-    recordingStatusCallback: '/twilio/recording',
-    finishOnKey: '#'
-  });
-  
-  // Park Slope Perk closing message
-  twiml.say(
-    { voice: 'alice', language: 'en-US' },
-    'Perfect! We got your order and will have it ready for you soon. ' +
-    'Thank you for calling Park Slope Perk. Have a wonderful day!'
-  );
-  
-  twiml.hangup();
-  
-  res.type('text/xml');
-  res.send(twiml.toString());
-});
+// Handle incoming phone call - support both GET and POST
+const handleVoiceWebhook = (req, res) => {
+  try {
+    const twiml = new twilio.twiml.VoiceResponse();
+
+    // Helpful debug logging (view in Railway logs)
+    const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'https').toString().split(',')[0].trim();
+    const host = (req.headers['x-forwarded-host'] || req.get('host') || '').toString().split(',')[0].trim();
+    const baseUrl = host ? `${proto}://${host}` : '';
+    
+    const callData = {
+      CallSid: req.body?.CallSid || req.query?.CallSid,
+      From: req.body?.From || req.query?.From,
+      To: req.body?.To || req.query?.To,
+      baseUrl
+    };
+    
+    console.log('[twilio/voice] incoming call', callData);
+    
+    // Park Slope Perk greeting message
+    twiml.say(
+      { voice: 'alice', language: 'en-US' },
+      'Thank you for calling Park Slope Perk! We\'re ready to take your order. ' +
+      'Please tell us what you\'d like, including the drink size and any modifications. ' +
+      'Speak clearly after the beep, and press pound when you\'re finished. Thank you!'
+    );
+    
+    // Record the order with transcription
+    const recordOptions = {
+      maxLength: 60,
+      transcribe: true,
+      finishOnKey: '#'
+    };
+    
+    // Use absolute URLs if we have baseUrl, otherwise use relative
+    if (baseUrl) {
+      recordOptions.transcribeCallback = `${baseUrl}/twilio/transcription`;
+      recordOptions.recordingStatusCallback = `${baseUrl}/twilio/recording`;
+    } else {
+      recordOptions.transcribeCallback = '/twilio/transcription';
+      recordOptions.recordingStatusCallback = '/twilio/recording';
+    }
+    
+    twiml.record(recordOptions);
+    
+    // Park Slope Perk closing message
+    twiml.say(
+      { voice: 'alice', language: 'en-US' },
+      'Perfect! We got your order and will have it ready for you soon. ' +
+      'Thank you for calling Park Slope Perk. Have a wonderful day!'
+    );
+    
+    twiml.hangup();
+    
+    // Send TwiML response
+    res.type('text/xml');
+    const twimlString = twiml.toString();
+    console.log('[twilio/voice] sending TwiML response');
+    res.send(twimlString);
+  } catch (error) {
+    console.error('[twilio/voice] ERROR:', error);
+    // Send error response to Twilio
+    const errorTwiml = new twilio.twiml.VoiceResponse();
+    errorTwiml.say(
+      { voice: 'alice', language: 'en-US' },
+      'We\'re sorry, there was an error processing your call. Please try again later.'
+    );
+    errorTwiml.hangup();
+    res.type('text/xml');
+    res.status(200).send(errorTwiml.toString());
+  }
+};
+
+// Handle both GET and POST (Twilio may use either)
+router.get('/voice', handleVoiceWebhook);
+router.post('/voice', handleVoiceWebhook);
 
 // Handle transcription callback
 router.post('/transcription', async (req, res) => {
@@ -53,6 +96,14 @@ router.post('/transcription', async (req, res) => {
   } = req.body;
   
   try {
+    console.log('[twilio/transcription] received', {
+      CallSid,
+      From,
+      To,
+      TranscriptionStatus,
+      hasText: Boolean(TranscriptionText && String(TranscriptionText).trim())
+    });
+
     const dbInstance = db.getDb();
     
     // Save call record
