@@ -46,8 +46,9 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Routes - IMPORTANT: Mount API routes BEFORE static files
-app.use('/api/orders', orderRoutes);
+// Mount Twilio routes first (most critical)
 app.use('/twilio', twilioRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Debug: Log all incoming requests
 app.use((req, res, next) => {
