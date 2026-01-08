@@ -18,9 +18,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
-
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -28,9 +25,12 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Routes
+// Routes - IMPORTANT: Mount API routes BEFORE static files
 app.use('/api/orders', orderRoutes);
 app.use('/twilio', twilioRoutes);
+
+// Serve static files from public directory (after API routes)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Health check
 app.get('/health', (req, res) => {
