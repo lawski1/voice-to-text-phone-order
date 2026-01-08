@@ -14,7 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Trust proxy (important for Railway/Heroku/etc)
-app.set('trust proxy', 1);
+app.set('trust proxy', true);
 
 // Middleware
 app.use(cors());
@@ -22,17 +22,21 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // Rate limiting - configured for proxy environments (Railway)
-// Use custom keyGenerator to avoid X-Forwarded-For validation issues
+// Disable X-Forwarded-For validation since we trust the proxy
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Custom key generator that works with proxies - avoids X-Forwarded-For validation error
+  // Custom key generator that works with proxies
   keyGenerator: (req) => {
     // Use the IP from the request, which Express will resolve from proxy headers
     // since we set trust proxy
     return req.ip || req.connection.remoteAddress || 'unknown';
+  },
+  // Skip validation of X-Forwarded-For header (we trust Railway's proxy)
+  validate: {
+    trustProxy: true
   },
   // Skip rate limiting for health checks and Twilio webhooks
   skip: (req) => {
