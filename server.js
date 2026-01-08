@@ -67,6 +67,20 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Direct test endpoint for Twilio webhook (for debugging)
+app.get('/test-twilio-voice', (req, res) => {
+  // Import and use the same handler
+  const twilioRoutes = require('./routes/twilio');
+  const handleVoiceWebhook = twilioRoutes._handleVoiceWebhook || ((req, res) => {
+    const twilio = require('twilio');
+    const twiml = new twilio.twiml.VoiceResponse();
+    twiml.say({ voice: 'alice', language: 'en-US' }, 'Test: Park Slope Perk webhook is working!');
+    res.type('text/xml');
+    res.send(twiml.toString());
+  });
+  handleVoiceWebhook(req, res);
+});
+
 // Test endpoint to verify routes are working
 app.get('/test-routes', (req, res) => {
   res.json({ 

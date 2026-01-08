@@ -93,6 +93,9 @@ const handleVoiceWebhook = (req, res) => {
 router.get('/voice', handleVoiceWebhook);
 router.post('/voice', handleVoiceWebhook);
 
+// Export handler for testing
+module.exports.handleVoiceWebhook = handleVoiceWebhook;
+
 // Handle transcription callback
 router.post('/transcription', async (req, res) => {
   const {
