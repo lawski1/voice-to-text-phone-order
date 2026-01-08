@@ -81,12 +81,24 @@ app.use((req, res) => {
 
 // Initialize database and start server
 db.init().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Health check: http://localhost:${PORT}/health`);
+  // Log all registered routes for debugging
+  console.log('=== REGISTERED ROUTES ===');
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      console.log(`${Object.keys(middleware.route.methods).join(', ').toUpperCase()} ${middleware.route.path}`);
+    } else if (middleware.name === 'router') {
+      console.log(`Router mounted at: ${middleware.regexp}`);
+    }
+  });
+  console.log('========================');
+  
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`✅ Health check: http://localhost:${PORT}/health`);
+    console.log(`✅ Twilio webhook: http://localhost:${PORT}/twilio/voice`);
   });
 }).catch(err => {
-  console.error('Failed to initialize database:', err);
+  console.error('❌ Failed to initialize database:', err);
   process.exit(1);
 });
 
