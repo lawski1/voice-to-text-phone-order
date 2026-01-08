@@ -1,0 +1,83 @@
+FRESH START DEPLOYMENT CHECKLIST
+================================
+
+PRE-DEPLOYMENT
+--------------
+[ ] Code is committed to Git
+[ ] Code is pushed to GitHub
+[ ] GitHub repository is public (or Render has access)
+
+RENDER.COM SETUP
+----------------
+[ ] Render.com account created
+[ ] Signed in with GitHub
+[ ] New Web Service created
+[ ] Connected to GitHub repository
+[ ] Service name set: voice-orders
+[ ] Build command: npm install
+[ ] Start command: npm start
+
+ENVIRONMENT VARIABLES (5 total)
+-------------------------------
+[ ] TWILIO_ACCOUNT_SID = ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+[ ] TWILIO_AUTH_TOKEN = your_auth_token_here
+[ ] TWILIO_PHONE_NUMBER = +18443513697
+[ ] NODE_ENV = production
+[ ] PORT = 10000
+
+DEPLOYMENT
+----------
+[ ] Service deployed successfully
+[ ] Service shows "Live" status
+[ ] Render URL copied: https://________________.onrender.com
+
+TWILIO CONFIGURATION
+--------------------
+[ ] Twilio Console opened
+[ ] Phone number (844) 351-3697 selected
+[ ] "A CALL COMES IN" webhook configured
+[ ] Webhook URL: https://YOUR-URL.onrender.com/twilio/voice
+[ ] Webhook method: POST
+[ ] Webhook saved
+[ ] Phone number +13479074828 verified in Twilio
+
+TESTING
+-------
+[ ] Health check works: /health returns {"status":"ok"}
+[ ] Webhook test works: /twilio/voice returns XML
+[ ] Dashboard loads: / shows order dashboard
+[ ] Phone call test: Call (844) 351-3697
+[ ] Greeting plays: "Thank you for calling Park Slope Perk!"
+[ ] Order recorded: Speak order and press #
+[ ] Order appears in dashboard
+
+SUCCESS CRITERIA
+----------------
+✅ Service is live on Render
+✅ Health endpoint responds
+✅ Webhook returns TwiML
+✅ Phone call works
+✅ Orders appear in dashboard
+✅ No "trial account" message (if number verified)
+
+TROUBLESHOOTING
+---------------
+If health check fails:
+  → Check Render logs
+  → Verify environment variables
+  → Check service status
+
+If webhook fails:
+  → Verify Twilio webhook URL
+  → Check Render logs
+  → Test webhook URL in browser
+
+If phone call doesn't work:
+  → Verify Twilio webhook is POST
+  → Check Render logs for incoming requests
+  → Verify phone number is verified in Twilio
+
+If "trial account" message:
+  → Add phone number to Twilio Verified Caller IDs
+  → Verify with code sent by Twilio
+
