@@ -29,6 +29,16 @@ app.use('/api/', limiter);
 app.use('/api/orders', orderRoutes);
 app.use('/twilio', twilioRoutes);
 
+// Debug: Log all incoming requests
+app.use((req, res, next) => {
+  console.log(`[${req.method}] ${req.path}`, {
+    url: req.url,
+    originalUrl: req.originalUrl,
+    baseUrl: req.baseUrl
+  });
+  next();
+});
+
 // Serve static files from public directory (after API routes)
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -46,7 +56,26 @@ app.get('/test-routes', (req, res) => {
       twilioVoice: '/twilio/voice',
       twilioTranscription: '/twilio/transcription',
       orders: '/api/orders'
-    }
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 404 handler for debugging
+app.use((req, res) => {
+  console.log(`[404] Route not found: ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    error: 'Route not found',
+    method: req.method,
+    path: req.path,
+    url: req.url,
+    availableRoutes: [
+      'GET /health',
+      'GET /test-routes',
+      'GET|POST /twilio/voice',
+      'POST /twilio/transcription',
+      'GET /api/orders'
+    ]
   });
 });
 
