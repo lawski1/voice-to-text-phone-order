@@ -37,6 +37,19 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Test endpoint to verify routes are working
+app.get('/test-routes', (req, res) => {
+  res.json({ 
+    message: 'Routes are working',
+    routes: {
+      health: '/health',
+      twilioVoice: '/twilio/voice',
+      twilioTranscription: '/twilio/transcription',
+      orders: '/api/orders'
+    }
+  });
+});
+
 // Initialize database and start server
 db.init().then(() => {
   app.listen(PORT, () => {

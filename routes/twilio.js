@@ -10,6 +10,14 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 
 // Handle incoming phone call - support both GET and POST
 const handleVoiceWebhook = (req, res) => {
+  console.log('[twilio/voice] webhook called', {
+    method: req.method,
+    url: req.url,
+    path: req.path,
+    body: req.body,
+    query: req.query
+  });
+  
   try {
     const twiml = new twilio.twiml.VoiceResponse();
 
