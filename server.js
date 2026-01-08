@@ -21,15 +21,16 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rate limiting - configured for proxy environments
+// Rate limiting - configured for proxy environments (Railway)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Trust proxy - skip validation of X-Forwarded-For header
-  validate: {
-    trustProxy: true
+  // Skip validation of X-Forwarded-For header (Railway proxy)
+  skip: (req) => {
+    // Skip rate limiting for health checks and Twilio webhooks
+    return req.path === '/health' || req.path.startsWith('/twilio');
   }
 });
 app.use('/api/', limiter);
