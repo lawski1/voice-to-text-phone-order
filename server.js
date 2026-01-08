@@ -13,15 +13,24 @@ const twilioRoutes = require('./routes/twilio');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy (important for Railway/Heroku/etc)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Rate limiting
+// Rate limiting - configured for proxy environments
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // Trust proxy - skip validation of X-Forwarded-For header
+  validate: {
+    trustProxy: true
+  }
 });
 app.use('/api/', limiter);
 
